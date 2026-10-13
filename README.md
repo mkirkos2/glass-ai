@@ -19,18 +19,18 @@ The project focuses on a clean user experience, persistent conversation history,
 
 ## Tech Stack
 
-| Technology | Purpose |
-|---|---|
-| PHP 8.3+ | Backend language |
-| Laravel 13 | Backend framework and application logic |
-| Vue 3 | Reactive user interface |
-| TypeScript | Static typing for frontend code |
-| Inertia.js | Integration between Laravel and Vue |
-| Tailwind CSS 4 | Utility-first styling |
-| SQLite | Relational database |
-| Gemini API | AI-generated responses |
-| Vite Plus | Frontend development and build tooling |
-| Laravel Fortify | Authentication functionality |
+| Technology      | Purpose                                 |
+| --------------- | --------------------------------------- |
+| PHP 8.3+        | Backend language                        |
+| Laravel 13      | Backend framework and application logic |
+| Vue 3           | Reactive user interface                 |
+| TypeScript      | Static typing for frontend code         |
+| Inertia.js      | Integration between Laravel and Vue     |
+| Tailwind CSS 4  | Utility-first styling                   |
+| SQLite          | Relational database                     |
+| Gemini API      | AI-generated responses                  |
+| Vite Plus       | Frontend development and build tooling  |
+| Laravel Fortify | Authentication functionality            |
 
 ## Requirements
 
