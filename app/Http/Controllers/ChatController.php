@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Conversation;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -12,7 +13,7 @@ class ChatController extends Controller
     /**
      * Returns the conversations of the logged-in user.
      */
-    public function index()
+    public function index(): JsonResponse
     {
         $conversations = Conversation::query()
             ->where('user_id', auth()->id())
@@ -28,7 +29,7 @@ class ChatController extends Controller
     /**
      * Returns a user's conversation along with its messages.
      */
-    public function show($id)
+    public function show(int|string $id): JsonResponse
     {
         $conversation = Conversation::query()
             ->where('user_id', auth()->id())
@@ -47,7 +48,7 @@ class ChatController extends Controller
     /**
      * Saves new messages and requests a response from Gemini.
      */
-    public function send(Request $request)
+    public function send(Request $request): JsonResponse
     {
         set_time_limit(90);
 
@@ -69,9 +70,12 @@ class ChatController extends Controller
             ],
         ]);
 
+        /** @var list<array{role: 'user'|'assistant', content: string}> $incomingMessages */
+        $incomingMessages = $validated['messages'];
+
         $apiKey = config('services.gemini.key');
 
-        if (!$apiKey) {
+        if (! $apiKey) {
             return response()->json([
                 'message' => 'The Gemini API key has not been set in .env.',
             ], 500);
@@ -81,17 +85,18 @@ class ChatController extends Controller
          * Find a conversation only from those of the logged-in user
          * or create a new conversation with their user_id.
          */
-        if (!empty($validated['conversation_id'])) {
+        if (! empty($validated['conversation_id'])) {
             $conversation = Conversation::query()
                 ->where('user_id', auth()->id())
-                ->findOrFail($validated['conversation_id']);
+                ->whereKey((int) $validated['conversation_id'])
+                ->firstOrFail();
         } else {
-            $firstUserMessage = collect($validated['messages'])
-                ->first(function ($message) {
+            $firstUserMessage = collect($incomingMessages)
+                ->first(function (array $message) {
                     return $message['role'] === 'user';
                 });
 
-            if (!$firstUserMessage) {
+            if (! $firstUserMessage) {
                 return response()->json([
                     'message' => 'No user message was found.',
                 ], 422);
@@ -110,7 +115,6 @@ class ChatController extends Controller
          * We only save messages that don't already exist.
          */
         $storedCount = $conversation->messages()->count();
-        $incomingMessages = $validated['messages'];
         $incomingCount = count($incomingMessages);
 
         if ($storedCount > $incomingCount) {
@@ -135,20 +139,20 @@ class ChatController extends Controller
          */
         $contents = [];
 
-        foreach ($validated['messages'] as $message) {
+        foreach ($incomingMessages as $message) {
             $role = $message['role'] === 'assistant'
                 ? 'model'
                 : 'user';
 
             // Gemini requires role alternation.
             if (
-                !empty($contents) &&
+                ! empty($contents) &&
                 end($contents)['role'] === $role
             ) {
                 $lastIndex = array_key_last($contents);
 
                 $contents[$lastIndex]['parts'][0]['text']
-                    .= "\n\n" . $message['content'];
+                    .= "\n\n".$message['content'];
 
                 continue;
             }
@@ -164,7 +168,7 @@ class ChatController extends Controller
         // Gemini must receive at least one user message.
         if (
             empty($contents) ||
-            !in_array('user', array_column($contents, 'role'), true)
+            ! in_array('user', array_column($contents, 'role'), true)
         ) {
             return response()->json([
                 'message' => 'No user message was found.',
@@ -190,7 +194,7 @@ class ChatController extends Controller
                     ]
                 );
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 Log::error('Gemini API error', [
                     'status' => $response->status(),
                     'response' => $response->json(),
@@ -205,7 +209,7 @@ class ChatController extends Controller
                 'candidates.0.content.parts.0.text'
             );
 
-            if (!is_string($answer) || trim($answer) === '') {
+            if (! is_string($answer) || trim($answer) === '') {
                 return response()->json([
                     'message' => 'Gemini returned an empty response.',
                 ], 502);
@@ -240,11 +244,12 @@ class ChatController extends Controller
     /**
      * Deletes a conversation only if it belongs to the logged-in user.
      */
-    public function destroy($id)
+    public function destroy(int|string $id): JsonResponse
     {
         $conversation = Conversation::query()
             ->where('user_id', auth()->id())
-            ->findOrFail($id);
+            ->whereKey($id)
+            ->firstOrFail();
 
         $conversation->delete();
 
