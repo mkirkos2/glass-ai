@@ -907,8 +907,7 @@ button {
 }
 
 button:focus-visible,
-a:focus-visible,
-textarea:focus-visible {
+a:focus-visible {
     outline: 2px solid rgba(172, 160, 255, 0.9);
     outline-offset: 3px;
 }
