@@ -6,6 +6,19 @@ Glass AI is a full-stack web application that provides an interactive AI chat ex
 
 The project focuses on a clean user experience, persistent conversation history, and a maintainable application structure.
 
+## Screenshots
+
+### Chat Interface
+
+![Glass AI - Example](screenshots/Example.png)
+
+![Glass AI - New Chat](screenshots/New%20start.png)
+
+### Authentication
+
+![Glass AI - Login](screenshots/Log%20in.png)
+
+![Glass AI - Sign Up](screenshots/Sign%20up.png)
 ## Features
 
 - **AI-powered conversations** — Send messages and receive AI-generated responses through the Gemini API.
